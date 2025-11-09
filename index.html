@@ -1,0 +1,303 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Excel/CSV Table Viewer & Search</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <!-- SheetJS for Excel/CSV parsing -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.17.4/xlsx.full.min.js"></script>
+  <style>
+    body {
+      font-family: 'Segoe UI', Arial, sans-serif;
+      background: linear-gradient(135deg, #273349 0%, #5a7ac2 70%, #77e3f7 100%);
+      margin: 0;
+      min-height: 100vh;
+    }
+    .header-bar {
+      width: 100%;
+      background: linear-gradient(90deg, #2564cf 5%, #23c5e9 95%);
+      color: #fff;
+      padding: 38px 0 30px 0;
+      text-align: center;
+      box-shadow: 0 2px 16px #2564cf10;
+      font-weight: 600;
+      letter-spacing: 2px;
+    }
+    .header-bar h1 {
+      margin: 0;
+      font-size: 2.5em;
+      font-weight: 700;
+      letter-spacing: 1.2px;
+      line-height: 1.15;
+      text-shadow: 0 2px 6px #2363d0;
+    }
+    .maincard {
+      background: #f7fcff;
+      border-radius: 24px;
+      max-width: 1500px;
+      margin: -44px auto 56px auto;
+      padding: 54px 38px 40px 38px;
+      box-shadow: 0 14px 48px 12px #2564cf2c, 0 1.5px 6px 0 #bdd7f7;
+      border: 1px solid #edf6fd;
+    }
+    .input-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 18px;
+      justify-content: center;
+      align-items: center;
+      margin-bottom: 32px;
+      margin-top: 18px;
+    }
+    input[type="file"] {
+      background: #e6f0fa;
+      color: #2564cf;
+      padding: 14px 18px;
+      border-radius: 9px;
+      border: 1.5px solid #68c6fa;
+      transition: box-shadow 0.2s;
+      font-size: 1.08em;
+    }
+    input[type="file"]:focus {
+      box-shadow: 0 0 10px #2363d040;
+      outline: none;
+      border-color: #2564cf;
+    }
+    input[type="text"] {
+      flex: 1 1 340px;
+      border: 1.8px solid #68c6fa;
+      background: #eaf4ff;
+      color: #23499c;
+      border-radius: 11px;
+      font-size: 1.23em;
+      padding: 13px 24px;
+      transition: border 0.22s, box-shadow 0.22s;
+      outline: none;
+      min-width: 230px;
+      box-shadow: 0 2px 8px #c7e8fa44;
+    }
+    input[type="text"]:focus {
+      border: 2.5px solid #2564cf;
+      box-shadow: 0 0 8px #2564cf33;
+    }
+    #searchBtn {
+      background: linear-gradient(90deg, #2564cf 60%, #23c5e9 100%);
+      color: #fff;
+      border-radius: 11px;
+      font-size: 1.23em;
+      padding: 13px 24px;
+      border: none;
+      font-weight: 600;
+      letter-spacing: 0.4px;
+      cursor: pointer;
+      box-shadow: 0 2px 8px #c7e8fa44;
+      transition: background 0.2s, box-shadow 0.2s;
+    }
+    #searchBtn:hover, #searchBtn:focus {
+      background: linear-gradient(90deg, #77e3f7 10%, #2564cf 90%);
+      color: #146ed5;
+      box-shadow: 0 2px 15px #68c6fa67;
+      outline: none;
+    }
+    #rowCount {
+      margin-bottom: 16px;
+      font-size: 1.18rem;
+      font-weight: 600;
+      letter-spacing: 0.4px;
+      color: #2558a1;
+      text-align: right;
+      background: linear-gradient(90deg, #c5edfd 60%, #d9f5ff 100%);
+      border-radius: 7px;
+      padding: 7px 24px 7px 0;
+      max-width: 240px;
+      margin-left: auto;
+      box-shadow: 0 1px 7px #b5dafc30;
+    }
+    #tableDiv {
+      margin-top: 12px;
+      overflow-x: auto;
+      border-radius: 17px;
+      box-shadow: 0 4px 20px 3px #9fd4f733;
+      border: 1.5px solid #9fd4f7;
+      background: #f9fcfd;
+      padding: 18px 6px 18px 6px;
+      max-width: 100%;
+      min-width: 0;
+    }
+    table {
+      border-collapse: separate;
+      border-spacing: 0;
+      width: 100%;
+      min-width: 900px;
+      background: #ebf5ff;
+      border-radius: 17px;
+      overflow: hidden;
+      font-size: 1.07em;
+      box-shadow: 0 0 12px  #2564cf18;
+    }
+    th, td {
+      padding: 15px 14px;
+      border-bottom: 1px solid #dae7fa;
+      text-align: left;
+      font-size: 1.08em;
+    }
+    th {
+      background: linear-gradient(90deg, #e9edfc 70%, #fffeee 100%);
+      color: #2463b8;
+      font-weight: 700;
+      border-bottom: 2px solid #90c8fc;
+      letter-spacing: 0.7px;
+    }
+    tr:last-child td {
+      border-bottom: none;
+    }
+    tr:nth-child(even) {
+      background: #eef7fb;
+    }
+    tr:hover td {
+      background: #f9fcd76a;
+      transition: background 0.18s;
+    }
+    mark {
+      background: linear-gradient(90deg, #ffe68c 70%, #fffeea 100%);
+      color: #1266da;
+      padding: 1px 3.5px;
+      border-radius: 3px;
+      font-weight: 600;
+      box-shadow: 0 1px 4.5px #ffe68c77;
+    }
+    @media (max-width: 1200px) {
+      .maincard { max-width: 99vw; padding: 10px;}
+      table { min-width: 600px; font-size: 0.97em;}
+      .header-bar h1 { font-size: 2.08em;}
+      th, td { font-size: 0.97em; padding: 10px 4px;}
+      #rowCount { 
+        font-size: 0.97rem;
+        padding: 6px 8px 5px 0;
+        max-width: 130px;
+      }
+    }
+    @media (max-width: 700px) {
+      .maincard { padding: 4px; }
+      th, td { font-size: 12px; padding: 4px 2px;}
+      .header-bar { padding: 18px 0 12px 0 }
+      input[type="text"] { font-size: 14px; padding: 6px 6px;}
+      #rowCount { font-size: 0.86rem; }
+    }
+  </style>
+</head>
+<body>
+  <div class="header-bar">
+    <h1>Excel/CSV Table Viewer & Search</h1>
+  </div>
+  <div class="maincard">
+    <div class="input-row">
+      <input type="file" id="fileInput" accept=".csv,.xls,.xlsx">
+      <input type="text" id="searchInput" placeholder="Type search word..." autocomplete="off" />
+      <button id="searchBtn">Search</button>
+    </div>
+    <div id="rowCount"></div>
+    <div id="tableDiv"></div>
+  </div>
+  <script>
+    let currentSearch = "";
+    function highlightText(cell, searchTerm) {
+      if (!searchTerm) return cell;
+      let cellStr = (cell !== undefined && cell !== null) ? cell.toString() : "";
+      const safeSearch = searchTerm.replace(/[-[\]/{}()*+?.\\^$|]/g, "\\$&");
+      let regex = new RegExp(`(${safeSearch})`, "gi");
+      return cellStr.replace(regex, '<mark>$1</mark>');
+    }
+    function displayTable(data) {
+      const count = (data && data.length > 1) ? (data.length - 1) : 0;
+      document.getElementById("rowCount").textContent = data && data.length
+        ? `Total rows: ${count}` : "";
+      if(!data || !data.length) {
+        document.getElementById("tableDiv").innerHTML = "";
+        return;
+      }
+      let html = "<table>";
+      data.forEach((row, i) => {
+        html += "<tr>";
+        row.forEach(cell => {
+          if(i === 0) {
+            html += `<th>${cell}</th>`;
+          } else {
+            html += `<td>${highlightText(cell, currentSearch)}</td>`;
+          }
+        });
+        html += "</tr>";
+      });
+      html += "</table>";
+      document.getElementById("tableDiv").innerHTML = html;
+    }
+    function filterAndSortRows(data, searchTerm) {
+      currentSearch = searchTerm;
+      if(!searchTerm) return data;
+      let filtered = data.filter((row, i) => 
+        i === 0 || row.join(" ").toLowerCase().includes(searchTerm.toLowerCase())
+      );
+      let header = filtered[0];
+      let rows = filtered.slice(1);
+      rows.sort((a, b) => {
+        let aStr = a.join(" ").toLowerCase();
+        let bStr = b.join(" ").toLowerCase();
+        let aMatch = aStr.indexOf(searchTerm.toLowerCase());
+        let bMatch = bStr.indexOf(searchTerm.toLowerCase());
+        return (aMatch === -1 ? 9999 : aMatch) - (bMatch === -1 ? 9999 : bMatch);
+      });
+      return [header, ...rows];
+    }
+    document.getElementById("fileInput").addEventListener("change", function(event) {
+      const file = event.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        let sheetData;
+        try {
+          if(file.name.endsWith('.csv')) {
+            const csv = e.target.result;
+            sheetData = XLSX.utils.sheet_to_json(XLSX.utils.csv_to_sheet(csv), {header:1});
+          } else {
+            const arr = new Uint8Array(e.target.result);
+            const workbook = XLSX.read(arr, {type:"array"});
+            let firstSheet = workbook.SheetNames[0];
+            sheetData = XLSX.utils.sheet_to_json(workbook.Sheets[firstSheet], {header:1});
+          }
+        } catch {
+          sheetData = [];
+        }
+        sessionStorage.setItem("tableData", JSON.stringify(sheetData));
+        currentSearch = "";
+        displayTable(sheetData);
+        document.getElementById('searchInput').value = '';
+      };
+      if(file.name.endsWith('.csv'))
+        reader.readAsText(file);
+      else
+        reader.readAsArrayBuffer(file);
+    });
+
+    // Search only on button or Enter
+    function handleSearch() {
+      const searchTerm = document.getElementById('searchInput').value.trim();
+      const raw = sessionStorage.getItem("tableData");
+      let data = raw ? JSON.parse(raw) : [];
+      let filteredSorted = filterAndSortRows(data, searchTerm);
+      displayTable(filteredSorted);
+    }
+    document.getElementById("searchBtn").addEventListener("click", handleSearch);
+
+    document.getElementById("searchInput").addEventListener("keypress", function(e) {
+      if (e.key === "Enter") {
+        handleSearch();
+      }
+    });
+
+    window.onload = function() {
+      const raw = sessionStorage.getItem("tableData");
+      if(raw) displayTable(JSON.parse(raw));
+    };
+  </script>
+</body>
+</html>

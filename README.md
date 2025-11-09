@@ -5,6 +5,12 @@ A modern, responsive web app for viewing, searching, and highlighting data from 
 
 ---
 
+## Live Demo
+
+[**Open the live site here**](https://mrajay279.github.io/Excel-CSV-Table-Viewer-and-Search/)
+
+---
+
 ## Features
 
 - Upload Excel (`.xlsx`, `.xls`) and CSV files from your device
@@ -22,6 +28,13 @@ A modern, responsive web app for viewing, searching, and highlighting data from 
 1. **Clone or download this repository**
 2. Open `index.html` in your browser
 3. Or deploy easily to GitHub Pages for public hosting
+
+### Deploying on GitHub Pages
+
+- Push the project to your GitHub repository
+- Open repository settings and enable GitHub Pages (choose branch, usually `main`)
+- Your app will be available at  
+  `https://mrajay279.github.io/Excel-CSV-Table-Viewer-and-Search/`
 
 ---
 
